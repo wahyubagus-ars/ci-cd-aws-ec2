@@ -5,7 +5,6 @@ import (
 	"net/http"
 )
 
-
 const (
 	Port = ":8080"
 )
@@ -18,7 +17,7 @@ type Person struct {
 
 func main() {
 	person := Person{
-		Name: "Bruce Wayne",
+		Name: "Bruce Wayne test",
 		Age:  34,
 		City: "Gotham City",
 	}
