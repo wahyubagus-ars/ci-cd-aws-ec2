@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"path"
+	"strings"
 )
 
 const (
@@ -12,7 +13,12 @@ const (
 )
 
 func Greeting(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+	name := r.URL.Query().Get("name")
+	if name == "" {
+		name = "Buddy"
+	} else {
+		name = strings.Title(name)
+	}
 	var filepath = path.Join("", "index.html")
 	var tmpl, err = template.ParseFiles(filepath)
 	if err != nil {
@@ -22,7 +28,7 @@ func Greeting(w http.ResponseWriter, r *http.Request) {
 
 	var data = map[string]interface{}{
 		"title": "Greeting",
-		"name":  vars["name"],
+		"name":  name,
 	}
 
 	err = tmpl.Execute(w, data)
@@ -33,7 +39,7 @@ func Greeting(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	router := mux.NewRouter()
-	router.HandleFunc("/{name}", Greeting)
+	router.HandleFunc("/", Greeting)
 
 	http.ListenAndServe(Port, router)
 }
