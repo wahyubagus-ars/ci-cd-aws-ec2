@@ -17,7 +17,7 @@ type Person struct {
 
 func main() {
 	person := Person{
-		Name: "Bruce Wayne test",
+		Name: "Bruce Wayne test 2",
 		Age:  34,
 		City: "Gotham City",
 	}
