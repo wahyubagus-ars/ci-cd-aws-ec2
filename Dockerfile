@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.20
+FROM golang:1.20-alpine
 
 # Set destination for COPY
 WORKDIR /app
@@ -14,6 +14,7 @@ RUN go mod download
 COPY *.go ./
 
 # Build
+RUN CGO_ENABLED=0 GOOS=linux go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux go build -o /go-cicd
 
 # Optional:

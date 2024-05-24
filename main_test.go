@@ -1,16 +1,18 @@
-package main_test
+package main
 
 import (
 	"bytes"
-	"github.com/julienschmidt/httprouter"
-	"github.com/stretchr/testify/assert"
 	"html/template"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gorilla/mux"             // Import gorilla/mux for route matching
+	"github.com/stretchr/testify/assert" // for assertions
 )
 
 func TestGreeting(t *testing.T) {
+	// Define expected data for the template
 	expectedData := map[string]interface{}{
 		"title": "Greeting",
 		"name":  "World",
@@ -30,14 +32,16 @@ func TestGreeting(t *testing.T) {
 	var tmpl bytes.Buffer
 	mockTemplate.Execute(&tmpl, expectedData) // Simulate template execution
 
-	// Create a handler function that uses the mock template
-	handler := httprouter.Handle(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Define a handler function that uses the mock template
+	handler := func(w http.ResponseWriter, r *http.Request) {
 		tmpl.WriteTo(w) // Write the pre-rendered template to the mock response writer
-	})
+	}
 
-	// Pass the mock request and handler to the router (simulates actual execution)
-	router := httprouter.New()
-	router.GET("/:name", handler)
+	// Create a router and register the handler for the route
+	router := mux.NewRouter()
+	router.HandleFunc("/{name}", handler)
+
+	// Serve the request using the matched route handler
 	router.ServeHTTP(recorder, req)
 
 	// Assert the response status code
