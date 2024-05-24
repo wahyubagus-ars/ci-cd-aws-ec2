@@ -1,32 +1,38 @@
 package main
 
 import (
-	"encoding/json"
+	"github.com/julienschmidt/httprouter"
+	"html/template"
 	"net/http"
+	"path"
 )
 
 const (
 	Port = ":8080"
 )
 
-type Person struct {
-	Name string `json:"name"`
-	Age  int    `json:"age"`
-	City string `json:"city"`
+func Greeting(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var filepath = path.Join("", "index.html")
+	var tmpl, err = template.ParseFiles(filepath)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var data = map[string]interface{}{
+		"title": "Greeting",
+		"name":  ps.ByName("name"),
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func main() {
-	person := Person{
-		Name: "Bruce Wayne test 2",
-		Age:  34,
-		City: "Gotham City",
-	}
+	router := httprouter.New()
+	router.GET("/:name", Greeting)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-
-		json.NewEncoder(w).Encode(person)
-	})
-
-	http.ListenAndServe(Port, nil)
+	http.ListenAndServe(Port, router)
 }
