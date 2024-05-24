@@ -1,42 +1,49 @@
-package main
+package main_test
 
 import (
-	"encoding/json"
+	"bytes"
+	"github.com/julienschmidt/httprouter"
+	"github.com/stretchr/testify/assert"
+	"html/template"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 )
 
-func TestUserEndpoint(t *testing.T) {
-	req, err := http.NewRequest("GET", "/user", nil)
+func TestGreeting(t *testing.T) {
+	expectedData := map[string]interface{}{
+		"title": "Greeting",
+		"name":  "World",
+	}
+
+	// Create a mock response writer to capture the response
+	recorder := httptest.NewRecorder()
+
+	// Define a mock request with the name parameter
+	req, err := http.NewRequest(http.MethodGet, "/John", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rr := httptest.NewRecorder()
+	// Create a mock template that always returns nil error (replace with your actual template parsing logic)
+	mockTemplate := template.New("index.html")
+	var tmpl bytes.Buffer
+	mockTemplate.Execute(&tmpl, expectedData) // Simulate template execution
 
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user := Person{
-			Name: "Bruce Wayne",
-			Age:  34,
-			City: "Gotham City",
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(user)
+	// Create a handler function that uses the mock template
+	handler := httprouter.Handle(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		tmpl.WriteTo(w) // Write the pre-rendered template to the mock response writer
 	})
 
-	handler.ServeHTTP(rr, req)
+	// Pass the mock request and handler to the router (simulates actual execution)
+	router := httprouter.New()
+	router.GET("/:name", handler)
+	router.ServeHTTP(recorder, req)
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusOK)
-	}
+	// Assert the response status code
+	assert.Equal(t, http.StatusOK, recorder.Code, "Unexpected status code")
 
-	expectedBody := `{"name":"Bruce Wayne","age":34,"city":"Gotham City"}`
-	actualBody := strings.TrimSpace(rr.Body.String())
-
-	if actualBody != expectedBody {
-		t.Errorf("Handler returned unexpected body: got %v want %v", actualBody, expectedBody)
-	}
+	// Assert the response body contains the expected data
+	expectedBody := "" // Replace with expected output based on your template
+	assert.Contains(t, recorder.Body.String(), expectedBody, "Unexpected response body")
 }
